@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>YouTube</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+	<link href="css/bootstrap-fileupload.min.css" rel="stylesheet">
+	<script src="lib/jquery.js"></script>
+	<script src="lib/bootstrap.min.js"></script>	
+	<script src="lib/bootstrap-fileupload.min.js"></script>	
+	<script src="lib/handlebars-1.0.rc.1.min.js"></script>
+	<script src="lib/jquery.bootpag.min.js"></script>
+	<script src="lib/bootstrap-paginator.min.js"></script>
+	<script src="js/hashtable.js"></script>	
+	<script src="js/ytube.js"></script>	
+	<script src="https://apis.google.com/js/client.js?onload=googleApiLoad"></script>
+</head>
+<body>
+	<div class="container-fluid">
+      
+        <h1>YouTube Player</h1>
+        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+		<p>
+		    <form id="yt_search_form">
+				<label>Label name</label>
+				<input type="text" id="yt_search_text" placeholder="Escreva alguma coisa…">
+				<a id="search-button" disabled nohref onclick="youTubeTestV3()" class="btn">Pesquisar</a>
+			</form>
+		</p>	
+		<div class="row-fluid">
+			<div class="span12">
+				<div class="container-fluid" id="youTubeListArea"></div>
+			</div>
+			<!-- 
+			<div class="span6">
+				<div id="player"> </div>	 
+			</div>
+			-->
+		</div>
+	  
+	</div>  
+	
+	<!-- Modals -->
+	<!-- Program details  -->
+	<div id="videoPlayerModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h5 id="myModalLabel">Video Player</h5>
+		</div>
+		<div class="modal-body">
+			<div id="videoPlayerContents"></div>
+		</div>
+		<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+		</div>
+	</div>
+	
+	<!-- templates -->
+	<!-- video list- table layout -->
+	
+	<script id="youTubeVideoList-template" type="text/x-handlebars-template">
+		<p> Pesquisa de <i>{{search_keyword}}</i>  Nr de videos : {{nrVideos}}</p>
+		<table class="table table-condensed"> 					
+			<thead> <tr> 
+			<th>ID</th> 
+			<th>Titulo</th> 
+			<th>User
+				<br>Categoria</th>
+			<th>duração</th>
+			<th>Contadores</th>
+			</tr> </thead>
+			<tbody>
+			{{#each videoList}}
+			<tr>
+				<td>
+				<a nohref onclick="playVideoModal('{{this.id}}');return false; "><img src="{{this.snippet.thumbnails.medium.url}}"></a><br>
+				{{this.id}}
+				</td>
+				<td>
+					<b><a nohref onclick="playVideoModal('{{this.id}}');return false; "> {{this.snippet.title}} </a></b><br>
+					{{this.snippet.description}}
+				</td>
+				<td>{{this.snippet.channelTitle}}
+				<br>{{this.snippet.categoryId}}</td>
+				<td>{{this.contentDetails.duration}}</td>
+				<td><i class="icon-thumbs-up"></i> &nbsp {{this.statistics.likeCount}} <br>
+					<i class="icon-thumbs-down"></i> &nbsp{{this.statistics.dislikeCount}}<br>
+					<i class="icon-eye-open"></i> &nbsp{{this.statistics.viewCount}}<br>
+					<i class="icon-star"></i> &nbsp{{this.statistics.favoriteCount}}<br>
+					<i class="icon-comment"></i> &nbsp{{this.statistics.commentCount}}
+				</td>	
+			</tr>
+			{{/each}}
+			</tbody>
+		</table>				
+	</script>	
+	
+	<!-- video player modal -->
+	
+	<script id="videoPlayer-template" type="text/x-handlebars-template">
+		<p><b> {{title}} </b></p> 
+		<iframe width='480' height='291' src='http://www.youtube.com/embed/{{videoId}}' frameborder='0' type='text/html'></iframe>
+	</script>
+	
+	
+	<script>
+      // 2. This code loads the IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var ytPlayer;
+      function onYouTubeIframeAPIReady() {
+        ytPlayer = new YT.Player('player', {
+          height: '291',  
+          width: '480',
+          
+          events: {
+            'onReady': onPlayerReady
+          }
+        });
+      }
+
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        //event.target.playVideo();
+      }
+
+      
+    </script>
+	
+</body>
+</html>
+
+

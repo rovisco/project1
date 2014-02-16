@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EPG Analyser</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+	<link href="css/bootstrap-fileupload.min.css" rel="stylesheet">
+	<script src="lib/jquery.js"></script>
+	<script src="lib/bootstrap.min.js"></script>	
+	<script src="lib/bootstrap-fileupload.min.js"></script>	
+	<script src="lib/handlebars-1.0.rc.1.min.js"></script>
+	<script src="lib/jquery.bootpag.min.js"></script>
+	<script src="lib/bootstrap-paginator.min.js"></script>
+	<script src="js/hashtable.js"></script>	
+	<script src="js/appEvents.js"></script>	
+	<script src="js/epg.js"></script>
+</head>
+<body>
+	<div class="container">
+		<div class="navbar">
+			<div class="navbar-inner">
+			<a class="brand" href="#">EPG Analiser</a>
+			<ul class="nav">
+			<li class="topmenu active" id="glfNav"><a nohref onclick="showSelectGLF();return false;">GLF</a></li>
+			<li class="topmenu" id="channelNav"><a nohref onclick="showChannels();return false;">Canais</a></li>
+			<li class="topmenu" id="seriesNav"><a nohref onclick="showSeries();return false;">Séries</a></li>
+			<li class="topmenu" id="channelStatsNav"><a nohref onclick="showChannelStats();return false;">Estatisticas</a></li>
+			</ul>
+			</div>
+		</div>
+	</div>
+	
+	<div class="container-fluid menu-area" id="glfArea">
+		<form id="myform" action="#" onsubmit="fileUpload();return false;"> 
+		<!-- <form method="post" enctype="multipart/form-data" action="/upload" id="myform"> -->
+		<div class="fileupload fileupload-new" data-provides="fileupload">
+			<div class="input-append">
+			<div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> 
+			<span class="fileupload-preview"></span></div><span class="btn btn-file">
+			<span class="fileupload-new">Select file</span>
+			<span class="fileupload-exists">Change</span><input type="file" id="inputFile" name="inputFile" /></span>
+			<a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
+			</div>
+		</div>
+		<button type="submit" class="btn"> Upload </button>
+		</form>	
+		 <!-- 
+		 
+		 <form method="post" enctype="multipart/form-data" action="/upload" >
+			<p>Title: <input type="text" name="title" /></p>
+			<p>Image: <input type="file" name="inputFile" /></p>
+			<p><input type="submit" value="Upload" /></p>
+		</form>
+		-->
+	</div>
+	
+	<!-- TV Channels Container-->
+	
+    <div class="container-fluid menu-area" id="channelsArea">
+		<div class="row-fluid">
+		<div class="span2" id="channelDisplay">
+		<!--Sidebar content-->
+			<script id="channelList-template" type="text/x-handlebars-template">
+				<p> Number TV Channels : {{nrChannels}}</p>
+				<table class="table table-condensed"> 					
+					<thead> <tr> <th>Number</th> <th>Name</th> </tr> </thead>
+					<tbody>
+					{{#each channelList}}
+					<tr>
+						<td>{{this.position}}</td>
+						<td> <a nohref onclick="showChannelPrograms( {{this.position}} );return false;">{{this.name}}</a></td>
+					</tr>
+					{{/each}}
+					</tbody>
+				</table>				
+			</script>		
+		</div>
+		<div class="span10">
+		<!--Body content-->
+			<div id="programList">
+				<script id="programList-template" type="text/x-handlebars-template">
+					<p> Programs for TV channel : {{tvChannel}}</p>
+					<table class="table table-condensed"> 					
+					<thead> <tr> <th>Program ID</th> <th>Program Title</th> <th>Episode</th> </tr> </thead>
+					<tbody>
+					{{#each programList}}
+					<tr>
+						<td>
+							<a nohref onclick="showProgramsDetails({{this.id}});return false; "> {{this.id}} </a>
+						</td>
+						<td>{{this.title}}</td>
+						<td>{{this.episodeTitle}}</td>
+					</tr>
+					{{/each}}
+					</tbody>
+				</table>			
+				</script>	
+			</div>
+		</div>
+		</div>
+    </div>
+	
+	<!-- TV Channels Stats Container-->
+	
+    <div class="container-fluid menu-area" id="channelsStatsArea">
+		<div class="row-fluid">
+		<div id="channel-stats-pagination"> </div>
+		<div class="span12" id="channelStatsDisplay">
+		
+		<!--Sidebar content-->
+			<script id="channelStats-template" type="text/x-handlebars-template">
+								
+				<table class="table table-condensed"> 					
+					<thead> <tr> 
+						<th>Number		
+							<div class="btn-group" >
+								<button type="button" class="btn btn-mini sort-button"  nohref onclick="sortResults(channelStats,'position',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></button>
+								<button type="button" class="btn btn-mini sort-button "  nohref onclick="sortResults(channelStats,'position',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></button>
+							</div>
+						</th> 
+						<th>Name		
+							<div class="btn-group">
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'name',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></a>
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'name',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></a>
+							</div>
+						</th> 
+						<th>Nr Programas		
+							<div class="btn-group">
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'nrPrograms',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></a>
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'nrPrograms',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></a>
+							</div>
+						</th>
+						<th>Nr Séries
+							<br> 		
+							<div class="btn-group">
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'nrSeries',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></a>
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'nrSeries',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></a>
+							</div>
+						</th>
+						<th>Nr Episódios
+							<br> 		
+							<div class="btn-group">
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'nrEpisodes',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></a>
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'nrEpisodes',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></a>
+							</div>
+						</th>
+						<th>Género
+							<br> 		
+							<div class="btn-group">
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'genre',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></a>
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'genre',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></a>
+							</div>
+						</th>
+						<th>Tit. Episodio
+							<br> 		
+							<div class="btn-group">
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'episodeTitle',true);reloadChannelStatsPage();return false;"><i class="icon-chevron-up"></i></a>
+								<a class="btn btn-mini" nohref onclick="sortResults(channelStats,'episodeTitle',false);reloadChannelStatsPage();return false;"><i class="icon-chevron-down"></i></a>
+							</div>
+						</th>
+					</tr> </thead>
+					<tbody>
+					{{#each channelList}}
+					<tr>
+						<td>{{this.position}}</td>
+						<td>{{this.name}}</td>
+						<td>{{this.nrPrograms}}</td>
+						<td>{{this.nrSeries}}</td>
+						<td>{{this.nrEpisodes}}</td>
+						<td>{{this.genre}}</td>
+						<td>{{this.episodeTitle}}</td>
+					</tr>
+					{{/each}}
+					</tbody>
+				</table>				
+			</script>		
+		</div>
+		</div>
+    </div>
+	
+	<!-- TV Series Container-->
+    <div class="container-fluid menu-area" id="seriesArea">
+		<div class="row-fluid">
+		
+
+			<div id="page-selection"> </div>
+			<div id="contentDemo"></div>
+    
+			<div id="seriesList">
+			<script id="seriesList-template" type="text/x-handlebars-template">
+				<p> Number TV Series : {{nrSeries}}</p>
+				<table class="table table-condensed"> 					
+					<thead> <tr> 
+						<th>Series ID</th> 
+						<th>Name</th>
+						<th>TV Channel</th>
+						<th>Nr Episodes</th> 
+					</tr> </thead>
+					<tbody>
+					{{#each seriesList}}
+					<tr>
+						<td>{{this.serieId}}</td>
+						<td>{{this.seriesTitle}}</td>
+						<td>{{this.channel}}</td>
+						<td>{{this.nrEpisodes}}</td>
+						
+						<!--
+						<td> <a nohref onclick="showChannelPrograms('+canais[i].id+');return false;">' + canais[i].name +'</a></td>		
+						-->
+					</tr>
+					{{/each}}
+					</tbody>
+				</table>				
+			</script>
+			</div>
+		</div>
+    </div>
+	
+	<!-- Modals -->
+	<!-- Program details  -->
+	<div id="ProgramDetailsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+		<h5 id="myModalLabel">Detalhe do Programa</h5>
+		</div>
+		<div class="modal-body">
+			<div id="programDetails">
+			
+			</div>
+		</div>
+		<div class="modal-footer">
+		<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+		</div>
+	</div>
+	
+		<!-- Loading  -->
+	<div id="loadingModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+ 		<h5 id="myModalLabel">A Carregar...</h5>
+		</div>
+		<div class="modal-body">
+			<div class="progress progress-striped active">
+				<div class="bar" style="width: 80%;"></div>
+			</div>
+		</div>
+		<div class="modal-footer">
+		</div>
+	</div>
+
+	<script id="programDetail-template" type="text/x-handlebars-template">
+			    <dl class="dl-horizontal">
+					<dt>Título</dt> <dd> &nbsp {{title}}</dd>
+					<dt>Descrição</dt> <dd> &nbsp{{description}}</dd>
+					<dt>ID</dt> <dd> &nbsp{{id}}</dd>
+					<dt>Nr do Episódio</dt> <dd> &nbsp {{episodeTitle}}</dd>		
+					<dt>Titulo do Episódio</dt> <dd> &nbsp {{episodeDesc}}</dd>					
+					<dt>Series ID</dt> <dd> &nbsp{{seriesId}}</dd>	
+					<dt>Género</dt> <dd> &nbsp{{genre}}</dd>	
+					<dt>Tipo</dt> <dd> &nbsp{{type}}</dd>
+				</dl>
+				<ul class="inline">
+					<li>Ano: {{year}} </li>
+					<li>País: {{origin}} </li>
+					<li>Duração: {{duration}} </li>
+					<li>Classe Parental: {{parental}} </li>
+				</ul>		
+	</script>
+	
+</body>
+</html>
+
+
